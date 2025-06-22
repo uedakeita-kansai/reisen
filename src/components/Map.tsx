@@ -6,7 +6,7 @@ import { getLineColor } from '@/lib/line-colors';
 
 const containerStyle = { width: '100%', height: '100%' };
 const center = { lat: 35.681236, lng: 139.767125 };
-const MAP_ID = 'YOUR_MAP_ID_HERE'; 
+const MAP_ID = 'YOUR_MAP_ID_HERE'; // 以前設定したあなたのMap ID
 
 function Map() {
   const { isLoaded } = useJsApiLoader({
@@ -17,7 +17,7 @@ function Map() {
 
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [activeMarkerId, setActiveMarkerId] = useState<string | null>(null);
-
+  
   const stations = useAppStore((state) => state.stations);
   const reachableStationIds = useAppStore((state) => state.reachableStationIds);
 
@@ -29,7 +29,7 @@ function Map() {
   const onUnmount = useCallback(() => {
     setMap(null);
   }, []);
-
+  
   if (!isLoaded) return <div>Loading...</div>;
 
   const activeStation = stations.find(s => s.id === activeMarkerId);
@@ -46,12 +46,26 @@ function Map() {
     >
       {map && stations.map((station) => {
         const isReachable = reachableStationIds?.has(station.id);
-        let markerOptions = {};
+        
+        // マーカーのスタイルを決定するロジック
+        let markerOptions;
         if (isReachable) {
+          // 行ける駅の場合
           const lineColor = getLineColor(station.id);
-          markerOptions = { color: lineColor, borderColor: lineColor, scale: 1.0, opacity: 1.0 };
+          markerOptions = {
+            color: lineColor,
+            borderColor: lineColor,
+            scale: 1.0,
+            opacity: 1.0,
+          };
         } else {
-          markerOptions = { color: '#808080', borderColor: '#696969', scale: reachableStationIds ? 0.6 : 1.0, opacity: reachableStationIds ? 0.3 : 1.0 };
+          // 行けない駅の場合（ただし、一度も検索していない場合は通常表示）
+          markerOptions = {
+            color: '#808080', // 灰色
+            borderColor: '#696969',
+            scale: reachableStationIds ? 0.6 : 1.0,
+            opacity: reachableStationIds ? 0.3 : 1.0,
+          };
         }
 
         return (
@@ -60,12 +74,14 @@ function Map() {
             map={map}
             position={station.position}
             title={station.name}
-            {...markerOptions}
             onClick={() => setActiveMarkerId(station.id)}
+            // スタイルオプションを展開して渡す
+            {...markerOptions}
           />
         );
       })}
 
+      {/* 開くべき情報ウィンドウがあれば表示 */}
       {activeStation && (
         <InfoWindowF
           position={activeStation.position}
