@@ -13,7 +13,7 @@ interface AppState {
   price: number;
   reachableStationIds: Set<string> | null;
   isSearching: boolean;
-  
+
   initializeStations: () => Promise<void>;
   setDepartureStation: (station: Station | null) => void;
   setPrice: (price: number) => void;
@@ -28,16 +28,12 @@ export const useAppStore = create<AppState>((set, get) => ({
   isSearching: false,
 
   initializeStations: async () => {
-    const { data, error } = await supabase
-      .from('stations')
-      .select('id, name, lat, lng')
-      .order('id', { ascending: true });
-
+    const { data, error } = await supabase.from('stations').select('id, name, lat, lng').order('id', { ascending: true });
     if (error) {
       console.error('駅データの取得に失敗:', error);
       return;
     }
-    const formattedStations = data.map(s => ({
+    const formattedStations = (data as any[]).map((s: any) => ({
       id: s.id,
       name: s.name,
       position: { lat: s.lat, lng: s.lng }
@@ -45,10 +41,10 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ stations: formattedStations });
   },
 
-  setDepartureStation: (station) => set({ departureStation: station, reachableStationIds: null }),
-  
-  setPrice: (price) => set({ price: price }),
-  
+  setDepartureStation: (station: Station | null) => set({ departureStation: station, reachableStationIds: null }),
+
+  setPrice: (price: number) => set({ price: price }),
+
   search: async () => {
     const { departureStation, price } = get();
     if (!departureStation) return;
@@ -64,11 +60,11 @@ export const useAppStore = create<AppState>((set, get) => ({
       });
 
       if (error) throw error;
-      
+
       const resultSet = new Set(data as string[]);
       set({ reachableStationIds: resultSet });
     } catch (error) {
-      console.error('検索の実行に失敗:', error);
+      console.error('検索の実行に失敗:', error as any);
     } finally {
       set({ isSearching: false });
     }
