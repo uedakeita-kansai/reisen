@@ -5,6 +5,9 @@ on:
     branches:
       - main # mainブランチにプッシュされた時に自動実行
 
+permissions:
+  contents: write
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -15,14 +18,13 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20' # あなたのNode.jsのバージョンに合わせてください
+          node-version: '20'
           cache: 'npm'
 
       - name: Install Dependencies 📦
         run: npm ci
 
       - name: Build 🏗️
-        # GitHub Secretsからキーを環境変数としてビルドプロセスに渡す
         run: npm run build
         env:
           VITE_Maps_API_KEY: ${{ secrets.VITE_Maps_API_KEY }}
@@ -33,4 +35,4 @@ jobs:
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist # 公開するフォルダを指定
+          publish_dir: ./dist
